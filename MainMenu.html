@@ -3,17 +3,31 @@
   <head>
     <meta charset="UTF-8">
     <title>Task Manager</title>
+    
+    <!-- Include Bootstrap CSS file -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    
+    <!-- Include custom CSS file -->
+    <link rel="stylesheet" href="custom.css">
   </head>
   <body>
-    <h1>Task Manager</h1>
-    <form>
-      <input type="text" placeholder="Enter a task...">
-      <button type="submit">Add Task</button>
-    </form>
-    <ul>
-      <li>Task 1</li>
-      <li>Task 2</li>
-      <li>Task 3</li>
-    </ul>
+    <div class="container">
+      <h1>Task Manager</h1>
+      <form class="form-inline">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Enter a task...">
+        </div>
+        <button type="submit" class="btn btn-primary">Add Task</button>
+      </form>
+      <ul class="list-group">
+        <li class="list-group-item">Task 1</li>
+        <li class="list-group-item">Task 2</li>
+        <li class="list-group-item">Task 3</li>
+      </ul>
+    </div>
+    
+    <!-- Include Bootstrap JavaScript file -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   </body>
 </html>
+
