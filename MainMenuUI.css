@@ -39,17 +39,17 @@ button[type="submit"] {
   cursor: pointer;
 }
 
-/* Style the task list */
-ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
 /* Style each task item in the list */
 li {
   background-color: #f2f2f2;
   padding: 10px;
   margin-bottom: 5px;
   border-radius: 4px;
+}
+
+/* Style each task button */
+.btn-default {
+  background-color: white;
+  color: #333;
+  border: 1px solid #ccc;
 }
