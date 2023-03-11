@@ -48,3 +48,18 @@ function addTask(task) {
 		li.classList.add('completed');
 		completedTasks.appendChild(li);
 	});
+
+	// add event listener to delete button
+	const deleteButton = li.querySelector('.delete-button');
+	deleteButton.addEventListener('click', function() {
+		// remove task from task list or completed tasks
+		if (li.classList.contains('completed')) {
+			completedTasks.removeChild(li);
+		} else {
+			taskList.removeChild(li);
+		}
+	});
+
+	// add new list item to task list
+	taskList.appendChild(li);
+}
