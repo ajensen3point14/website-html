@@ -1,33 +1,24 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Task Manager</title>
-    
-    <!-- Include Bootstrap CSS file -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    
-    <!-- Include custom CSS file -->
-    <link rel="stylesheet" href="custom.css">
-  </head>
-  <body>
-    <div class="container">
-      <h1>Task Manager</h1>
-      <form class="form-inline">
-        <div class="form-group">
-          <input type="text" class="form-control" placeholder="Enter a task...">
-        </div>
-        <button type="submit" class="btn btn-primary">Add Task</button>
-      </form>
-      <ul class="list-group">
-        <li class="list-group-item"><button type="button" class="btn btn-default">Task 1</button></li>
-        <li class="list-group-item"><button type="button" class="btn btn-default">Task 2</button></li>
-        <li class="list-group-item"><button type="button" class="btn btn-default">Task 3</button></li>
-      </ul>
-    </div>
-    
-    <!-- Include Bootstrap JavaScript file -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  </body>
+<head>
+	<title>Task Manager</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+	<h1>Task Manager</h1>
+	<form id="task-form">
+		<label for="task-name">Task Name:</label>
+		<input type="text" id="task-name" required>
+		<label for="due-date">Due Date:</label>
+		<input type="date" id="due-date" required>
+		<label for="task-details">Task Details:</label>
+		<textarea id="task-details"></textarea>
+		<button type="submit">Add Task</button>
+	</form>
+	<h2>Tasks</h2>
+	<ul id="task-list"></ul>
+	<h2>Completed Tasks</h2>
+	<ul id="completed-tasks"></ul>
+	<script src="script.js"></script>
+</body>
 </html>
-
