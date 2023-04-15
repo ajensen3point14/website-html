@@ -1,16 +1,17 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const MongoStore = require('connect-mongo')(session);
+//const MongoStore = require('connect-mongo')(session);
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
-const WebSocket = require('ws');
+//const WebSocket = require('ws');
 
 const app = express();
-const port = 3000;
+const port = 4000;
 
+/*
 // Set up MongoDB connection
-mongoose.connect('mongodb://startup.aaronwebprogramming260.click', useNewUrlParser: true, useUnifiedTopology: true });
+//mongoose.connect('mongodb://startup.aaronwebprogramming260.click', useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
@@ -33,20 +34,30 @@ app.use(session({
   saveUninitialized: true,
   store: new MongoStore({ mongooseConnection: mongoose.connection })
 }));
+*/
 
 // Set up body parser middleware
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+/*
 // Set up WebSocket server
 const wsServer = new WebSocket.Server({ port: 8080 });
 console.log('WebSocket server listening on port 8080');
+*/
+
+
 
 // Set up login route
 app.post('/login', (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
+  
+  if (username == 'aaron2' && password == 'test') {
+    res.redirect('/MainMenu.html');
+  } else { res.redirect('/login.html'); }
 
+/*
   // Check if user exists
   User.findOne({ username: username }, (err, user) => {
     if (err) {
@@ -72,6 +83,7 @@ app.post('/login', (req, res) => {
       });
     }
   });
+*/
 });
 
 // Set up logout route
