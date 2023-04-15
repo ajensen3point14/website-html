@@ -1,0 +1,42 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+
+h1 {
+  text-align: center;
+}
+
+form {
+  margin: 10px;
+}
+
+label {
+  display: inline-block;
+  width: 100px;
+  text-align: right;
+}
+
+input[type="text"],
+input[type="password"] {
+  margin-left: 10px;
+}
+
+button {
+  margin-left: 110px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 10px;
+}
+
+li {
+  margin-bottom: 5px;
+}
+
+.completed {
+  text-decoration: line-through;
+}
+
