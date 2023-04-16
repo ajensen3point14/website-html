@@ -1,17 +1,28 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-//const MongoStore = require('connect-mongo')(session);
 const bcrypt = require('bcrypt');
+const MongoStore = require('connect-mongo');
 const mongoose = require('mongoose');
-//const WebSocket = require('ws');
+const WebSocket = require('ws');
 
 const app = express();
 const port = 4000;
 
-/*
-// Set up MongoDB connection
-//mongoose.connect('mongodb://startup.aaronwebprogramming260.click', useNewUrlParser: true, useUnifiedTopology: true });
+
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const uri = "mongodb+srv://ajensen3point14:V235yxe9!!YoDead@webprogramming.xzxdrcm.mongodb.net/?retryWrites=true&w=majority";
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
+
+mongoose.connect(uri, {useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
@@ -22,68 +33,73 @@ db.once('open', function() {
 const taskSchema = new mongoose.Schema({
   description: String,
   completed: Boolean,
+  name: String,
+  dueDate: String,
   username: String
 });
 
 const Task = mongoose.model('Task', taskSchema);
 
+//Define schema and model for users
+const userSchema = new mongoose.Schema({
+  username: String,
+  passwordHash: String
+});
+
+const User = mongoose.model('User', userSchema);
+
 // Set up session middleware
 app.use(session({
-  secret: 'my-secret',
+  secret: 'Correct-Horse.Battery;Staple!',
   resave: false,
   saveUninitialized: true,
-  store: new MongoStore({ mongooseConnection: mongoose.connection })
+  //store: new MongoStore({ mongooseConnection: mongoose.connection })
+  store: MongoStore.create({client})
 }));
-*/
 
 // Set up body parser middleware
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-/*
+
 // Set up WebSocket server
 const wsServer = new WebSocket.Server({ port: 8080 });
 console.log('WebSocket server listening on port 8080');
-*/
-
 
 
 // Set up login route
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   
-  if (username == 'aaron2' && password == 'test') {
-    res.redirect('/MainMenu.html');
-  } else { res.redirect('/login.html'); }
+  try {
+    // Ensure username is valid
+    validUser = await User.findOne({ username: username });
+    if (validUser == null) throw Exception('Invalid username');
+    console.log('Valid user: '+ validUser);
 
-/*
-  // Check if user exists
-  User.findOne({ username: username }, (err, user) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send('Internal server error');
-    } else if (!user) {
-      res.status(401).send('Invalid username or password');
-    } else {
-      // Compare passwords
-      bcrypt.compare(password, user.password, (err, result) => {
-        if (err) {
-          console.error(err);
-          res.status(500).send('Internal server error');
-        } else if (!result) {
-          res.status(401).send('Invalid username or password');
-        } else {
-          // Save user ID in session
-          req.session.userId = user._id;
+    // Verify correct password
+    same = await bcrypt.compare(password, validUser.passwordHash);
+    if (!same) { res.status(401).send('Invalid password'); }
+    else {
+      // Save user ID in session
+      req.session.userId = validUser._id;
+      req.session.username = validUser.username;
 
-          // Send success response
-          res.send('Login successful');
-        }
-      });
+      // Send success response
+      res.send('Login successful');
     }
-  });
-*/
+
+  } catch (ex) { res.status(500).send('Internal server error: ' + ex); }
+});
+
+// Verify users are logged in/out
+app.get('/info', async(req, res) => {
+  console.log('userID: ' + req.session.userId);
+  if (req.session.userId) {
+    validUser = await User.findOne({_id:req.session.userId});
+    res.send('Logged in as user ' + validUser.username);
+  } else { res.send('Not logged in'); }
 });
 
 // Set up logout route
@@ -101,7 +117,7 @@ app.get('/logout', (req, res) => {
 });
 
 // Set up task list route
-app.get('/tasks', (req, res) => {
+app.get('/tasks', async (req, res) => {
   // Check if user is logged in
   if (!req.session.userId) {
     res.status(401).send('Unauthorized');
@@ -109,47 +125,46 @@ app.get('/tasks', (req, res) => {
   }
 
   // Get tasks for current user
-  Task.find({ username: req.session.username }, (err, tasks) => {
-    if (err) {
+    try {
+	    taskList = await Task.find({ username: req.session.username });
+	    res.json(taskList);
+    } catch (err) {
       console.error(err);
       res.status(500).send('Internal server error');
-    } else {
-      // Send tasks as JSON
-      res.json(tasks);
     }
-  });
 });
 
 // Set up add task route
-app.post('/tasks', (req, res) => {
+app.post('/tasks', async (req, res) => {
   // Check if user is logged in
   if (!req.session.userId) {
     res.status(401).send('Unauthorized');
     return;
   }
 
-  // Create new task
+  // Create new task (node-side)
   const task = new Task
   ({
     description: req.body.description,
     completed: false,
-    username: req.session.username
+    username: req.session.username,
+    name: req.body.taskName,
+    dueDate: req.body.dueDate,
   });
-
+  console.log(task);
+  console.log(req.body);
   // Save task to database
-  task.save((err) => {
-    if (err) {
+  try {
+    await task.save();
+    res.send('{}');
+  } catch (err) {
       console.error(err);
       res.status(500).send('Internal server error');
-    } else {
-      // Send success response
-      res.send('Task added');
-    }
-  });
+  }
 });
 
 // Set up update task route
-app.put('/tasks/:id', (req, res) => {
+app.put('/tasks/:id', async (req, res) => {
   // Check if user is logged in
   if (!req.session.userId) {
     res.status(401).send('Unauthorized');
@@ -158,23 +173,26 @@ app.put('/tasks/:id', (req, res) => {
 
   // Get task ID from URL parameter
   const taskId = req.params.id;
-
+  const taskContents = { 
+	  name: req.body.name,
+	  description: req.body.description,
+	  completed: req.body.completed,
+	  dueDate: req.body.dueDate
+  }
+  console.log(taskId);
+  console.log(taskContents);
   // Update task in database
-  Task.findByIdAndUpdate(taskId, { completed: req.body.completed }, (err, task) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send('Internal server error');
-    } else if (!task) {
-      res.status(404).send('Task not found');
-    } else {
-      // Send success response
-      res.send('Task updated');
-    }
-  });
+  var query = { _id: taskId, username: req.session.username };
+  try {
+	  await Task.findOneAndUpdate(query, taskContents);
+	  res.redirect('/tasks');
+  } catch (err) {
+	  res.status(500).send('Internal server error');
+  }
 });
 
 // Set up delete task route
-app.delete('/tasks/:id', (req, res) => {
+app.delete('/tasks/:id', async (req, res) => {
   // Check if user is logged in
   if (!req.session.userId) {
     res.status(401).send('Unauthorized');
@@ -185,17 +203,11 @@ app.delete('/tasks/:id', (req, res) => {
   const taskId = req.params.id;
 
   // Delete task from database
-  Task.findByIdAndDelete(taskId, (err, task) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send('Internal server error');
-    } else if (!task) {
-      res.status(404).send('Task not found');
-    } else {
-      // Send success response
-      res.send('Task deleted');
-    }
-  });
+  var query = { _id: taskId, username: req.session.username };
+  try {
+	  await Task.findOneAndDelete(query);
+	  res.redirect('/tasks');
+  } catch (err) { res.status(500).send('Internal server error'); }
 });
 
 // Serve static files
