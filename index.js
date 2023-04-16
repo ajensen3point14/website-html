@@ -77,6 +77,8 @@ app.post('/login', async (req, res) => {
   
   try {
     // Ensure username is valid
+    if (password.length == 0 || username.length == 0) throw Error('Must provide a username and password');
+    
     validUser = await User.findOne({ username: username });
     if (validUser == null && whichButton == "Login") throw Error('Invalid username');
     if (validUser != null && whichButton == "Create") throw Error('User already exists');
