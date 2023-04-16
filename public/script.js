@@ -37,24 +37,12 @@ form.addEventListener('submit', async (e) => {
 
 	try {
 	const content = await response.json();
+	location.reload();
 	} catch (error) { 
 	  alert(error); 
 	  return; 
 	}
 
-	// create new task object with task name, details, and due date
-	const task = {
-		name: taskName,
-		description: taskDetails || '',
-		dueDate: dueDate,
-		completed: false
-	};
-
-	// add task to task list
-	addTask(task);
-
-	// reset form
-	form.reset();
 });
 
 taskArray = [];
@@ -96,22 +84,10 @@ function addCompletedTask(task) {
                 <h3>${task.name}</h3>
                 ${task.description ? `<p>${task.description}</p>` : ''}
                 <p>Due Date: ${task.dueDate}</p>
+		<button onclick="taskArray[${index}].completed=false;editTask('${task._id}', ${index})" class="complete-button">Reopen Task</button>
 		<button onclick="deleteTask('${task._id}')" class="delete-button">Delete Task</button>
         `;
 
-/*
-        // add event listener to delete button
-        const deleteButton = li.querySelector('.delete-button');
-        deleteButton.addEventListener('click', function() {
-                // remove task from task list or completed tasks
-                if (li.classList.contains('completed')) {
-                        completedTasks.removeChild(li);
-                } else {
-                        taskList.removeChild(li);
-                }
-        });
-*/
-        // add new list item to task list
         completedTasks.appendChild(li);
 }
 

@@ -71,11 +71,21 @@ console.log('WebSocket server listening on port 8080');
 app.post('/login', async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
+  var whichButton = "Login";
+  if (req.body.Create) { whichButton = "Create"; }
+  console.log(req.body);
   
   try {
     // Ensure username is valid
     validUser = await User.findOne({ username: username });
-    if (validUser == null) throw Exception('Invalid username');
+    if (validUser == null && whichButton == "Login") throw Error('Invalid username');
+    if (validUser != null && whichButton == "Create") throw Error('User already exists');
+    if (validUser == null && whichButton == "Create") {
+      const saltRounds = 10;
+      h = await bcrypt.hash(password, saltRounds);
+      validUser = User({username: username, passwordHash: h});
+      await validUser.save();
+    }
     console.log('Valid user: '+ validUser);
 
     // Verify correct password
@@ -87,7 +97,7 @@ app.post('/login', async (req, res) => {
       req.session.username = validUser.username;
 
       // Send success response
-      res.send('Login successful');
+      res.redirect('/MainMenu.html');
     }
 
   } catch (ex) { res.status(500).send('Internal server error: ' + ex); }
@@ -111,7 +121,7 @@ app.get('/logout', (req, res) => {
       res.status(500).send('Internal server error');
     } else {
       // Redirect to login page
-      res.redirect('/');
+      res.redirect('/login.html');
     }
   });
 });
