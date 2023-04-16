@@ -136,7 +136,7 @@ app.get('/tasks', async (req, res) => {
 
   // Get tasks for current user
     try {
-	    taskList = await Task.find({ username: req.session.username });
+	    taskList = await Task.find({ username: req.session.username }).sort({dueDate: 1});
 	    res.json(taskList);
     } catch (err) {
       console.error(err);
