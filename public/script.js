@@ -2,6 +2,7 @@
 const form = document.getElementById('task-form');
 const taskList = document.getElementById('task-list');
 const completedTasks = document.getElementById('completed-tasks');
+const weatherInfo = document.getElementById('weather');
 
 // add event listener to fetch tasks from Node
 window.addEventListener('load', async (e) => {
@@ -12,6 +13,17 @@ window.addEventListener('load', async (e) => {
 
 	// Iterate through array and populate the DOM
 	taskList.filter(addTask);
+
+	// Fetch the weather
+	const weather = await fetch('/weather', { method: 'GET' });
+	var weatherVar = await weather.json();
+	forecast = weatherVar[0]["forecast"][0];
+	weatherInfo.innerHTML = `
+		${weatherVar[0]["location"]["name"]} weather for 
+		${forecast.day} : ${forecast["skytextday"]} | low:
+		${forecast["low"]} | high: ${forecast["high"]} | rain chance: 
+		${forecast["precip"]}%
+	`;
 });
 
 // add event listener to form submit event

@@ -19,6 +19,7 @@
     "mongoose": "^7.0.3",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
+    "weather-js": "^2.0.0",
     "ws": "^8.13.0"
   },
   "bugs": {

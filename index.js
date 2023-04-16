@@ -8,7 +8,7 @@ const WebSocket = require('ws');
 
 const app = express();
 const port = 4000;
-
+const weather = require('weather-js');
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = "mongodb+srv://ajensen3point14:V235yxe9!!YoDead@webprogramming.xzxdrcm.mongodb.net/?retryWrites=true&w=majority";
@@ -66,6 +66,17 @@ app.use(bodyParser.json());
 const wsServer = new WebSocket.Server({ port: 8080 });
 console.log('WebSocket server listening on port 8080');
 
+app.get('/weather', (req, res) => {
+  try {
+    weather.find({search: 'Provo, UT', degreeType: 'F'}, (err, result) => {
+      if (err) { 
+        console.log(err); 
+        res.status(500).send('Internal server error' + err);
+      } else { res.json(result); }
+
+    });
+  } catch (err) { res.status(500).send('Internal server error' + err); } 
+});
 
 // Set up login route
 app.post('/login', async (req, res) => {
