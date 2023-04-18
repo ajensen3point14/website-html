@@ -89,23 +89,23 @@ Be organised from the start. Halfway through this project, I realized I had code
 Simplicity in design is key. This project consolidated the original plan to just one main menu page, instead of redirecting all over the place, unifying code and using fewer files.
 
 ### React
-npm install react - in project directory
-npm install -g create-react-app
+In project directory, run `npm install react`
+Then run `npm install -g create-react-app`
 
-in react each function controls a part of a screen
+In react each function controls a part of a screen.
 
-JS componenets need to start w/ a capital letter
+JS componenets need to start with a capital letter.
 
-React blends html and js
+React blends html and js in one convenient location.
 
-html can only be returned in a single tag, but it can be a dummy tag and hold
-a bunch of others
+HTML can only be returned in a single tag, but it can be a dummy tag and hold
+a bunch of others.
 
 The direction matters - parents can pass info to child elements/components, but child components can't pass
 data back to parents. To have children notify parents, pass a callback in from the parent that the child
-can invoke
+can invoke.
 
-react rendering happens dynamically in the client
+react rendering happens dynamically in the client.
 
-npm run build - this will run Babel so other systems can read my code, and will help me get the client js
+`npm run build` - this will run Babel so other systems can read my code, and will help me get the client js
 
