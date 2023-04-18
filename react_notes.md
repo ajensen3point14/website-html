@@ -21,6 +21,25 @@ Per the rubric, the following changes have been made:
 - See below
 
 ## Notes
+In project directory, run `npm install react`
+Then run `npm install -g create-react-app`
+
+In react each function controls a part of a screen.
+
+JS componenets need to start with a capital letter.
+
+React blends html and js in one convenient location.
+
+HTML can only be returned in a single tag, but it can be a dummy tag and hold
+a bunch of others.
+
+The direction matters - parents can pass info to child elements/components, but child components can't pass
+data back to parents. To have children notify parents, pass a callback in from the parent that the child
+can invoke.
+
+react rendering happens dynamically in the client.
+
+`npm run build` - this will run Babel so other systems can read my code, and will help me get the client js
 
 React offers an interesting approach, with some nice network efficiencies. React can minimize the amount of network traffic going back and forth from a server, 
 for example, since instead of loading the entire page, it can enable an approach where only the updated part of a page needs to be reloaded.
