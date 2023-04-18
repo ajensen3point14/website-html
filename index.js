@@ -8,7 +8,7 @@ const WebSocket = require('ws');
 
 const app = express();
 var expressWs = require('express-ws') (app);
-const port = 4000;
+const port = 3500;
 const weather = require('weather-js');
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -46,8 +46,15 @@ const userSchema = new mongoose.Schema({
   username: String,
   passwordHash: String
 });
-
 const User = mongoose.model('User', userSchema);
+
+// API token expiration (used by react client)
+const apiSessionSchema = new mongoose.Schema({
+  username: String,
+  expiration: Date
+});
+const APISession = mongoose.model('APISession', apiSessionSchema);
+
 
 // Set up session middleware
 sessionParser = session({
@@ -62,6 +69,208 @@ app.use(sessionParser);
 // Set up body parser middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(bodyParser.text());
+
+app.post('/api/register', async (req, res) => {
+  var username, password;
+  console.log('Post to /api/register; req.body: ' + JSON.stringify(req.body));
+
+  var data = JSON.parse(req.body);
+  username = data.username;
+  password = data.password;
+
+  try {
+    // Ensure username is valid
+    if (password.length == 0 || username.length == 0) throw Error('Must provide a username and password');
+    
+    var validUser = await User.findOne({ username: username });
+    if (validUser != null) throw Error('User already exists');
+    const saltRounds = 10;
+    h = await bcrypt.hash(password, saltRounds);
+    validUser = await User({username: username, passwordHash: h}).save();
+    console.log('Valid user: '+ validUser);
+
+    // Save APISessions entry, and clear out any old items
+    console.log('Deleting old sessions');
+    await APISession.deleteMany({'username':username});
+    console.log('Prepping exp date');
+    var exp = new Date();
+    exp = exp.setTime(exp.getTime() + (3600*1));
+    console.log('exp date: ' + exp);
+    var session = await APISession({'username':username, 'expiration':exp}).save();
+    console.log('Created API session');
+    // Send success response
+    res.send(JSON.stringify(session));
+
+  } catch (ex) { res.status(500).send('{}'); }
+});
+
+app.post('/api/login', async (req, res) => {
+  var username, password;
+  console.log('Post to /api/login; req.body: ' + JSON.stringify(req.body));
+
+  var data = JSON.parse(req.body);
+  username = data.username;
+  password = data.password;
+
+  var whichButton = "Login";
+  if (req.body.Create) { whichButton = "Create"; }
+  console.log(req.body);
+  
+  try {
+    // Ensure username is valid
+    if (password.length == 0 || username.length == 0) throw Error('Must provide a username and password');
+    
+    validUser = await User.findOne({ username: username });
+    if (validUser == null && whichButton == "Login") throw Error('Invalid username');
+    if (validUser != null && whichButton == "Create") throw Error('User already exists');
+    if (validUser == null && whichButton == "Create") {
+      const saltRounds = 10;
+      h = await bcrypt.hash(password, saltRounds);
+      validUser = User({username: username, passwordHash: h});
+      await validUser.save();
+    }
+    console.log('Valid user: '+ validUser);
+
+    // Verify correct password
+    same = await bcrypt.compare(password, validUser.passwordHash);
+    if (!same) { res.status(401).send('Invalid password'); }
+    else {
+      // Save APISessions entry, and clear out any old items
+      console.log('Deleting old sessions');
+      await APISession.deleteMany({'username':username});
+      console.log('Prepping exp date');
+      var exp = new Date();
+      exp = exp.setTime(exp.getTime() + (3600*1));
+      console.log('exp date: ' + exp);
+      var session = await APISession({'username':username, 'expiration':exp}).save();
+      console.log('Created API session');
+      // Send success response
+      res.send(JSON.stringify(session));
+    }
+
+  } catch (ex) { res.status(500).send('{}'); }
+});
+
+app.get('/api/tasks', async (req, res) => {
+  var username, password;
+  console.log('GET /api/tasks');
+
+  var sessionID = req.query.s;
+  if (!sessionID) {
+    res.status(400).send('{}');
+    return;
+  }
+  console.log('sessionID: ', sessionID);
+
+  try {
+    var sess = await APISession.findById(sessionID);
+    if (!sess) {
+      res.status(400).send('{}');
+      return;
+    }
+    var username = sess.username;
+    taskList = await Task.find({ username: username }).sort({dueDate: 1});
+    res.send(JSON.stringify(taskList));
+  } catch (ex) {
+    console.log('Error: ' + ex);
+    res.status(500).send('{}');
+  }
+});
+
+app.post('/api/tasks', async (req, res) => {
+  var username, password;
+  console.log('POST /api/tasks');
+
+  var data = JSON.parse(req.body);
+  name = data.name;
+  dueDate = data.dueDate;
+  description = data.description;
+
+  var sessionID = req.query.s;
+  if (!sessionID) {
+    res.status(400).send('{}');
+    return;
+  }
+  console.log('sessionID: ', sessionID);
+
+  try {
+    var sess = await APISession.findById(sessionID);
+    if (!sess) {
+      res.status(400).send('{}');
+      return;
+    }
+    var username = sess.username;
+    var task = await Task({username:username, name:name, dueDate:dueDate, description:description}).save();
+    res.send(JSON.stringify(task));
+  } catch (ex) {
+    console.log('Error: ' + ex);
+    res.status(500).send('{}');
+  }
+});
+
+app.post('/api/delete/:id', async (req, res) => {
+  var username, password;
+  console.log('POST /api/delete');
+
+  const taskId = req.params.id;
+
+  var sessionID = req.query.s;
+  if (!sessionID) {
+    res.status(400).send('{}');
+    return;
+  }
+  console.log('sessionID: ', sessionID);
+
+  try {
+    var sess = await APISession.findById(sessionID);
+    if (!sess) {
+      res.status(400).send('{}');
+      return;
+    }
+    var username = sess.username;
+    var task = await Task.deleteMany({username:username, _id:taskId});
+    res.send('{}');
+  } catch (ex) {
+    console.log('Error: ' + ex);
+    res.status(500).send('{}');
+  }
+});
+
+app.post('/api/update/:id', async (req, res) => {
+  var username, password;
+  console.log('POST /api/update');
+
+  const taskId = req.params.id;
+  var data = JSON.parse(req.body);
+  name = data.name;
+  dueDate = data.dueDate;
+  description = data.description;
+  completed = data.completed;
+
+  var sessionID = req.query.s;
+  if (!sessionID) {
+    res.status(400).send('{}');
+    return;
+  }
+  console.log('sessionID: ', sessionID);
+
+  try {
+    var sess = await APISession.findById(sessionID);
+    if (!sess) {
+      res.status(400).send('{}');
+      return;
+    }
+    var username = sess.username;
+    var query = { _id: taskId, username: username };
+    var task = await Task.findOneAndUpdate(query, {name:name, dueDate:dueDate, description:description, completed:completed});
+    res.send(JSON.stringify(task));
+  } catch (ex) {
+    console.log('Error: ' + ex);
+    res.status(500).send('{}');
+  }
+});
+
 
 // Add weather functionality
 app.get('/weather', (req, res) => {
@@ -78,8 +287,18 @@ app.get('/weather', (req, res) => {
 
 // Set up login route
 app.post('/login', async (req, res) => {
-  const username = req.body.username;
-  const password = req.body.password;
+  var username, password;
+  var data;
+  console.log('Post to login; req.body: ' + JSON.stringify(req.body));
+
+  if (req.is('text/plain')) {
+    data = JSON.parse(req.body);
+  } else if (req.is('application/json')) {
+    data = req.body;
+  }
+  username = data.username;
+  password = data.password;
+
   var whichButton = "Login";
   if (req.body.Create) { whichButton = "Create"; }
   console.log(req.body);
@@ -136,6 +355,25 @@ app.get('/logout', (req, res) => {
     }
   });
 });
+
+
+app.get('/tasks', async (req, res) => {
+  // Check if user is logged in
+  if (!req.session.userId) {
+    res.status(401).send('Unauthorized');
+    return;
+  }
+
+  // Get tasks for current user
+  try {
+    taskList = await Task.find({ username: req.session.username }).sort({dueDate: 1});
+    socket.send(JSON.stringify(taskList));
+  } catch (err) {
+    console.error(err);
+    socket.send('[]');
+  }
+});
+
 
 // Set up add task route
 app.post('/tasks', async (req, res) => {
@@ -242,6 +480,9 @@ app.ws('/ws', async (socket, req) => {
 
 // Serve static files
 app.use(express.static('public'));
+
+// Enable endpoint for react app
+app.use('/react', express.static('react-client/build'));
 
 // Start server
 app.listen(port, () => {
