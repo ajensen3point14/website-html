@@ -4,15 +4,32 @@ const taskList = document.getElementById('task-list');
 const completedTasks = document.getElementById('completed-tasks');
 const weatherInfo = document.getElementById('weather');
 
+var socket;
+
 // add event listener to fetch tasks from Node
 window.addEventListener('load', async (e) => {
-	const response = await fetch('/tasks', {
-		method: 'GET'
-	});
-	var taskList = await response.json();
+  console.log('running scripts on page...');
+  const protocol = window.location.protocol === 'http:' ? 'ws' : 'wss';
+  socket = new WebSocket(`${protocol}://${window.location.host}/ws`);
+  socket.onopen = (event) => {
+      console.log('Socket opened');
+      socket.send('{"message":"client says hi"}');
+  };
 
-	// Iterate through array and populate the DOM
-	taskList.filter(addTask);
+  socket.onmessage = function(evt) {
+      var data = evt.data;
+      console.log('received: ' + JSON.parse(data));
+      tasks = JSON.parse(data);
+      taskList.innerHTML = '';
+      completedTasks.innerHTML = '';
+      tasks.filter(addTask);
+  };
+
+  socket.onclose = function() {
+      console.log('Socket closed');
+  };
+  console.log(socket);
+  console.log('Done'); 	
 
 	// Fetch the weather
 	const weather = await fetch('/weather', { method: 'GET' });
@@ -30,9 +47,9 @@ window.addEventListener('load', async (e) => {
 form.addEventListener('submit', async (e) => {
 	// prevent default form submission behavior
 	e.preventDefault();
-	const taskName = document.getElementById('task-name').value;
-        const taskDetails = document.getElementById('task-details').value;
-        const dueDate = document.getElementById('due-date').value;
+	const taskName = document.getElementById('task-name');
+        const taskDetails = document.getElementById('task-details');
+        const dueDate = document.getElementById('due-date');
 	
 	const response = await fetch('/tasks', {
 	  method: 'POST',
@@ -41,15 +58,18 @@ form.addEventListener('submit', async (e) => {
 		'Content-Type': 'application/json'
 	  },
 	  body: JSON.stringify({
-	    taskName:taskName,
-	    description:taskDetails,
-	    dueDate:dueDate
+	    taskName:taskName.value,
+	    description:taskDetails.value,
+	    dueDate:dueDate.value
 	  })
 	});
 
 	try {
 	const content = await response.json();
-	location.reload();
+  socket.send('{}');
+  taskName.value = '';
+  taskDetails.value = '';
+  dueDate.value = '';
 	} catch (error) { 
 	  alert(error); 
 	  return; 
@@ -68,14 +88,14 @@ async function editTask(taskId, index) {
 		},
 		body: JSON.stringify(taskArray[index])
 	  });
-	  location.reload();
+    socket.send('{}');
 	} catch (err) { alert(err); }
 }
 
 async function deleteTask(taskId) {
 	try {
 	  await fetch('/tasks/' + taskId, { method: 'DELETE' });
-	  location.reload();
+    socket.send('{}');
 	} catch (err) { alert(err); }
 }
 

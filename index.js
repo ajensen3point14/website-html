@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const WebSocket = require('ws');
 
 const app = express();
+var expressWs = require('express-ws') (app);
 const port = 4000;
 const weather = require('weather-js');
 
@@ -49,23 +50,21 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 // Set up session middleware
-app.use(session({
-  secret: 'Correct-Horse.Battery;Staple!',
+sessionParser = session({
+  secret: 'Frank-lowly.Ripcode;ninety-seven!',
   resave: false,
   saveUninitialized: true,
-  //store: new MongoStore({ mongooseConnection: mongoose.connection })
+  // store: new MongoStore({ mongooseConnection: mongoose.connection })
   store: MongoStore.create({client})
-}));
+});
+
+app.use(sessionParser);
 
 // Set up body parser middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-
-// Set up WebSocket server
-const wsServer = new WebSocket.Server({ port: 8080 });
-console.log('WebSocket server listening on port 8080');
-
+// Add weather functionality
 app.get('/weather', (req, res) => {
   try {
     weather.find({search: 'Provo, UT', degreeType: 'F'}, (err, result) => {
@@ -139,6 +138,7 @@ app.get('/logout', (req, res) => {
   });
 });
 
+/*
 // Set up task list route
 app.get('/tasks', async (req, res) => {
   // Check if user is logged in
@@ -156,6 +156,7 @@ app.get('/tasks', async (req, res) => {
       res.status(500).send('Internal server error');
     }
 });
+*/
 
 // Set up add task route
 app.post('/tasks', async (req, res) => {
@@ -208,7 +209,7 @@ app.put('/tasks/:id', async (req, res) => {
   var query = { _id: taskId, username: req.session.username };
   try {
 	  await Task.findOneAndUpdate(query, taskContents);
-	  res.redirect('/tasks');
+    res.send('{}');
   } catch (err) {
 	  res.status(500).send('Internal server error');
   }
@@ -229,8 +230,35 @@ app.delete('/tasks/:id', async (req, res) => {
   var query = { _id: taskId, username: req.session.username };
   try {
 	  await Task.findOneAndDelete(query);
-	  res.redirect('/tasks');
+    res.send('{}');
   } catch (err) { res.status(500).send('Internal server error'); }
+});
+
+async function sendTasks(socket, req) { 
+  // Check if user is logged in
+  if (!req.session.userId) {
+    socket.send('[]');
+    return;
+  }
+
+  // Get tasks for current user
+    try {
+	    taskList = await Task.find({ username: req.session.username }).sort({dueDate: 1});
+      socket.send(JSON.stringify(taskList));
+    } catch (err) {
+      console.error(err);
+        socket.send('[]');
+    }
+}
+
+// Websocket logging
+app.ws('/ws', async (socket, req) => {
+  console.log('  ws connected')
+  sendTasks(socket, req);
+  socket.on('message', function(msg) {
+    sendTasks(socket, req);
+    console.log("  Read from ws: " + msg);
+  });
 });
 
 // Serve static files
