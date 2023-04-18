@@ -54,7 +54,6 @@ sessionParser = session({
   secret: 'Frank-lowly.Ripcode;ninety-seven!',
   resave: false,
   saveUninitialized: true,
-  // store: new MongoStore({ mongooseConnection: mongoose.connection })
   store: MongoStore.create({client})
 });
 
@@ -137,26 +136,6 @@ app.get('/logout', (req, res) => {
     }
   });
 });
-
-/*
-// Set up task list route
-app.get('/tasks', async (req, res) => {
-  // Check if user is logged in
-  if (!req.session.userId) {
-    res.status(401).send('Unauthorized');
-    return;
-  }
-
-  // Get tasks for current user
-    try {
-	    taskList = await Task.find({ username: req.session.username }).sort({dueDate: 1});
-	    res.json(taskList);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send('Internal server error');
-    }
-});
-*/
 
 // Set up add task route
 app.post('/tasks', async (req, res) => {

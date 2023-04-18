@@ -137,18 +137,7 @@ function addOpenTask(task) {
 		<button onclick="taskArray[${index}].completed=true;editTask('${task._id}', ${index})" class="complete-button">Complete Task</button>
 		<button onclick="deleteTask('${task._id}')" class="delete-button">Delete Task</button>
 	`;
-/*
-	// add event listener to delete button
-	const deleteButton = li.querySelector('.delete-button');
-	deleteButton.addEventListener('click', function() {
-		// remove task from task list or completed tasks
-		if (li.classList.contains('completed')) {
-			completedTasks.removeChild(li);
-		} else {
-			taskList.removeChild(li);
-		}
-	});
-*/
+
 	// add new list item to task list
 	taskList.appendChild(li);
 }
