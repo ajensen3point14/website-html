@@ -1,4 +1,5 @@
 import {useState, useEffect} from 'react';
+import {Link, useNavigate} from "react-router-dom";
 
 
 export default function TaskPage({sessionID}) {
@@ -6,6 +7,11 @@ export default function TaskPage({sessionID}) {
   const [openList, setOpenList] = useState([]);
   const [completedList, setCompletedList] = useState([]);
   const [isLoaded, setLoaded] = useState(false);
+  const navigate = useNavigate();
+
+  if (!sessionID) {
+    navigate('/');
+  }
 
   useEffect(() => {
     if (!isLoaded) {
@@ -51,7 +57,7 @@ export default function TaskPage({sessionID}) {
   return (
     <>
       <p>
-        <a href="/">Logout</a>&nbsp;&nbsp;&nbsp;
+        <Link to="/">Logout</Link>&nbsp;&nbsp;&nbsp;
         <a href="https://github.com/ajensen3point14/website-html">GitHub</a>
       </p>
       <p><strong>Created by: Aaron Jensen</strong></p>

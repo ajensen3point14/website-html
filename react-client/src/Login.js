@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {useNavigate} from "react-router-dom";
 
 
 export default function Login({onloggedin}) {
@@ -6,6 +7,7 @@ export default function Login({onloggedin}) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [msgColor, setMsgColor] = useState('blue');
+  const navigate = useNavigate();
 
   function showMsg(m, isError=false) {
     setMsg(m);
@@ -43,6 +45,8 @@ export default function Login({onloggedin}) {
         var responseData = await resp.json();
         console.log('logged in successfully...body: ' + JSON.stringify(responseData));
         onloggedin(responseData._id);
+
+        navigate('/tasks');
       } else {
         throw 'Login failed';
       }
@@ -63,7 +67,7 @@ export default function Login({onloggedin}) {
             <TextInput label="Password" name="password" setter={setPassword} />
           </tbody>
         </table>
-        <button name="Login" value="1" type="button" onClick={Login}>Login</button>
+        <button name="Login" value="1" type="button" onClick={Login}>Login</button>&nbsp;&nbsp;
         <button name="Create" value="1" type="button" onClick={Create}>Create</button>
       </form>
       <p style={{'color':msgColor}}>{msg}</p>
